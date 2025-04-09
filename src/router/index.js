@@ -8,17 +8,27 @@ import Blog from '../views/web/Blog.vue';
 import Perfil from '../views/admin/perfil/Perfil.vue';
 import Usuario from '../views/admin/user/Usuario.vue';
 import AppLayout from '@/layout/AppLayout.vue';
+import LayoutSitio from '../components/layousitio/LayoutSitio.vue';
+import Producto from '../views/web/Producto.vue';
+import Persona from '../views/admin/persona/Persona.vue';
 
 const routes = [
-    { path: "/", component: Inicio },
-    { path: "/nosotros", component: Nosotros },
-    { path: "/servicios", component: Servicios },
-    { path: "/blog", component: Blog },
     {
-        path: "/auth/login",
-        component: Login,
-        name: "Login",
-        meta: { redirectIfAuth: true }
+        path: "/",
+        component: LayoutSitio,
+        children: [
+            { path: "/", component: Inicio },
+            { path: "/nosotros", component: Nosotros },
+            { path: "/productos", component: Producto},
+            { path: "/servicios", component: Servicios },
+            { path: "/blog", component: Blog },
+            {
+                path: "/auth/login",
+                component: Login,
+                name: "Login",
+                meta: { redirectIfAuth: true }
+            },
+        ]
     },
     {
         path: "/admin",
@@ -34,6 +44,12 @@ const routes = [
                 path: "usuario",
                 component: Usuario,
                 name: "Usuario",
+                meta: { requireAuth: true }
+            },
+            {
+                path: "persona",
+                component: Persona,
+                name: "Persona",
                 meta: { requireAuth: true }
             }
         ]
