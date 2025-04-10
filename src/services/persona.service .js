@@ -7,5 +7,9 @@ export default{
     
     guardarPersona(datos){
         return Api().post("/persona",datos);
+    },
+
+    asignarUserPersona(id,datos){
+        return Api().post('/persona/'+id+'/adduser',datos);
     }
 }
