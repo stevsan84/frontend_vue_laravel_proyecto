@@ -9,9 +9,11 @@ import Perfil from '../views/admin/perfil/Perfil.vue';
 import Usuario from '../views/admin/user/Usuario.vue';
 import AppLayout from '@/layout/AppLayout.vue';
 import LayoutSitio from '../components/layousitio/LayoutSitio.vue';
-import Producto from '../views/web/Producto.vue';
+import Producto from '../views/web/Producto.vue'
 import Persona from '../views/admin/persona/Persona.vue';
 import Categoria from '../views/admin/inventario/categoria/Categoria.vue';
+import GestionProducto from '../views/admin/inventario/producto/Producto.vue';
+import Inventario from '../views/admin/inventario/Inventario.vue';
 
 const routes = [
     {
@@ -54,11 +56,25 @@ const routes = [
                 meta: { requireAuth: true }
             },
             {
-                path: "categoria",
-                component: Categoria,
-                name: "Categoria",
-                meta: { requireAuth: true }
+                path: "inventario",
+                component: Inventario,
+                meta: { requireAuth: true },
+                children: [
+                    {
+                        path: "categoria",
+                        component: Categoria,
+                        name: "Categoria",
+                        meta: { requireAuth: true }
+                    },
+                    {
+                        path: "producto",
+                        component: GestionProducto,
+                        name: "GestionProducto",
+                        meta: { requireAuth: true }
+                    }
+                ]
             }
+            
         ]
     },
 

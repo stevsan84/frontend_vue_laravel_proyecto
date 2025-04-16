@@ -27,12 +27,12 @@ const model = ref([
             {
                 label: 'Categorías',
                 icon: 'pi pi-fw pi-globe',
-                to: '/admin/categoria'
+                to: '/admin/inventario/categoria'
             },
             {
                 label: 'Productos',
                 icon: 'pi pi-fw pi-box',
-                to: '/admin/producto'
+                to: '/admin/inventario/producto'
             },
         ]
     },
