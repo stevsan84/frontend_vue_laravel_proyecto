@@ -23,7 +23,7 @@
                             <InputIcon>
                                 <i class="pi pi-search" />
                             </InputIcon>
-                            <InputText v-model="buscar" placeholder="Buscar..." @keyup.enter="getProductos()"/>
+                            <InputText v-model="buscar" placeholder="Buscar..." @keyup="getProductos()"/>
                         </IconField>
                     </div>
                 </template>
@@ -40,6 +40,7 @@
                         {{ formatCurrency(slotProps.data.precio) }}
                     </template>
                 </Column>
+                <Column field="stock" header="Stock" sortable style="min-width: 4rem"></Column>
                 <Column field="categoria.nombre" header="Categoria" sortable style="min-width: 4rem"></Column>
                 
                 <Column field="estado" header="Estado" sortable style="min-width: 2rem">
@@ -70,35 +71,54 @@
                     <InputIcon>
                         <i class="pi pi-search" />
                     </InputIcon>
-                    <InputText v-model="buscar" placeholder="Buscar..." @keyup.enter="getProductos()"/>
+                    <InputText v-model="buscar_cliente" placeholder="Buscar..." @keyup.enter="getclienteBusquedad()"/>
                 </IconField>
+                <div class="card" v-if="cliente_seleccionado.id">
+                    <strong>Nombres: {{ cliente_seleccionado.nombre_completo }}</strong>
+                    <br>
+                    <strong>Cedula: {{ cliente_seleccionado.ci_nit }}</strong>
+                    <br>
+                    <strong>Teléfono: {{ cliente_seleccionado.telefono }}</strong>
+                    <br>
+                    <strong>Dirección: {{ cliente_seleccionado.direccion }}</strong>
+                    <br>
+                    <strong>Email: {{ cliente_seleccionado.correo }}</strong>  
+                </div>
             </div>
             <div class="bg-white p-4 rounded shadown">
                 <h2 class="text-xl font-semibold mb-4">Pedido</h2>
                 Observación
                 <Textarea></Textarea>
-                <Button label="Generar Pedido" @click="visibleCliente = true" />
+                <Button label="Generar Pedido" @click="funGuardarPedido()" />
             </div>
         </div>
     </div>
 
-    <Dialog v-model:visible="visibleCliente" modal header="Datos Cliente" :style="{ width: '25rem' }">
+    <Dialog v-model:visible="visibleCliente" modal header="Datos del Cliente" :style="{ width: '25rem' }">
         <span class="text-surface-500 dark:text-surface-400 block mb-8">Cliente.</span>
         <div class="flex items-center gap-4 mb-4">
             <label for="username" class="font-semibold w-24">Nombre</label>
-            <InputText id="username" class="flex-auto" autocomplete="off" />
+            <InputText id="username" v-model="cliente.nombre_completo" class="flex-auto" autocomplete="off" required="true"/>
         </div>
         <div class="flex items-center gap-4 mb-4">
-            <label for="username" class="font-semibold w-24">Nombre</label>
-            <InputText id="username" class="flex-auto" autocomplete="off" />
+            <label for="cedula" class="font-semibold w-24">Cedula</label>
+            <InputText id="cedula" v-model="cliente.ci_nit" class="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex items-center gap-4 mb-4">
+            <label for="telefono" class="font-semibold w-24">Teléfono</label>
+            <InputText id="telefono" v-model="cliente.telefono" class="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex items-center gap-4 mb-4">
+            <label for="direccion" class="font-semibold w-24">Dirección</label>
+            <InputText id="direccion" v-model="cliente.direccion" class="flex-auto" autocomplete="off" />
         </div>
         <div class="flex items-center gap-4 mb-8">
             <label for="email" class="font-semibold w-24">Email</label>
-            <InputText id="email" class="flex-auto" autocomplete="off" />
+            <InputText id="email" type="email" v-model="cliente.correo"  class="flex-auto" autocomplete="off" />
         </div>
         <div class="flex justify-end gap-2">
             <Button type="button" label="Cancelar" severity="secondary" @click="visibleCliente = false"></Button>
-            <Button type="button" label="Guardar" @click="visible = false"></Button>
+            <Button type="button" label="Guardar" @click="saveCliente"></Button>
         </div>
     </Dialog>
 </template>
@@ -107,6 +127,8 @@
 import { onMounted, ref } from 'vue';
 import productoService from '@/services/producto.service';
 import Swal from 'sweetalert2';
+import clienteService from '@/services/cliente.service';
+import pedidoService from '../../../services/pedido.service';
 
 const products = ref([]);
 const buscar = ref("");
@@ -117,6 +139,9 @@ const producto = ref({});
 const dt = ref();
 const carrito = ref([]);
 const visibleCliente = ref(false);
+const cliente = ref({});
+const cliente_seleccionado = ref({});
+const buscar_cliente = ref("");
 
 onMounted(() => {
     getProductos();
@@ -136,6 +161,10 @@ const getProductos = async () => {
     loading.value = false;
 }
 
+const getclienteBusquedad = async () => {
+    const {data} = await clienteService.funBusquedadCliente(buscar_cliente.value);
+            cliente_seleccionado.value = data;
+}
 const formatCurrency = (value) => {
     if(value)
         return value.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
@@ -159,6 +188,57 @@ const getStatusLabel = (status) => {
 };
 
 const funAddCarrito = (prod) =>{
-    carrito.value.push({producto_id: prod.id, nombre: prod.nombre, cantidad: 1, precio: prod.precio})
+    carrito.value.push({id: prod.id, nombre: prod.nombre, cantidad: 1, precio: prod.precio})
+}
+
+const saveCliente = async () =>{
+    try {
+        if (cliente?.value.nombre_completo?.trim()) {
+            const {data} = await clienteService.funGuardar(cliente.value);
+            cliente_seleccionado.value = data.cliente;
+            visibleCliente.value = false;
+            cliente.value = {};
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Cliente Guardado",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+        }
+    } catch (error) {
+        Swal.fire({
+            title: "Problema al registrar!",
+            text: "ok para continuar!",
+            icon: "warn"
+        });
+    }
+}
+
+const funGuardarPedido = async () =>{
+    try {
+     let datos= {
+        cliente_id : cliente_seleccionado.value.id,
+        productos:  carrito.value
+     }  
+
+     const {data} = await pedidoService.funGuardar(datos);
+     cliente_seleccionado.value = {};
+     carrito.value = [];
+
+     Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "Pedido Guardado",
+        showConfirmButton: false,
+        timer: 1500
+    });
+    } catch (error) {
+        Swal.fire({
+            title: "Problema al registrar!",
+            text: "ok para continuar!",
+            icon: "warn"
+        });
+    }
 }
 </script>
